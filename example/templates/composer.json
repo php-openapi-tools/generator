@@ -1,6 +1,6 @@
 {
-  "name": "api-clients/{{ packageName }}",
-  "description": "Non-Blocking first {{ fullName }} client",
+  "name": "api-clients/{{ package.name }}",
+  "description": "{{ package.metadata.description }}",
   "license": "MIT",
   "authors": [
     {
@@ -36,12 +36,12 @@
   },
   "autoload": {
     "psr-4": {
-      "{{ namespace|trim('\\', 'left')|replace({'\\': '\\\\'}) }}": "src/"
+      "{{ package.namespace.source|trim('\\', 'left')|replace({'\\': '\\\\'}) }}": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "{{ namespace|trim('\\', 'left')|replace({'\\': '\\\\'}) }}": "src/"
+      "{{ package.namespace.test|trim('\\', 'left')|replace({'\\': '\\\\'}) }}": "tests/"
     }
   },
 {% if suggests is iterable and suggests|length > 0 %}
@@ -51,11 +51,11 @@
 {% endfor %}
 },
 {% endif %}
-{% if qa.phpstan.enabled is constant('true') and qa.phpstan.configFilePath is not constant('null') %}
+{% if package.qa.phpstan.enabled is constant('true') and package.qa.phpstan.configFilePath is not constant('null') %}
   "extra": {
     "phpstan": {
       "includes": [
-        "{{ qa.phpstan.configFilePath }}"
+        "{{ package.qa.phpstan.configFilePath }}"
       ]
     }
   },
@@ -70,7 +70,6 @@
       "composer/package-versions-deprecated": true,
       "ergebnis/composer-normalize": true,
       "icanhazstring/composer-unused": true,
-      "wyrihaximus/composer-update-bin-autoload-path": true,
       "infection/extension-installer": true
     }
   }

@@ -1,2 +1,2 @@
-# openapi-client-generator
-OpenAPI client generator
+# utils
+Utils for OpenAPI Tools

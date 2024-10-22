@@ -1,0 +1,32 @@
+state:
+  file: state.json
+gathering:
+  spec: https://raw.githubusercontent.com/github/rest-api-description/main/descriptions-next/api.github.com/api.github.com.yaml
+  voter: []
+  schemas:
+    allowDuplication: true
+    useAliasesForDuplication: true
+packages:
+  - vendor: api-clients
+    name: github
+    repository: git@github.com:php-api-clients/github.git
+    branch: v0.2.x
+    targetVersion: null
+    templates:
+      dir: ../templates
+      variables: []
+    namespace:
+      source: ApiClients\Client\GitHub
+      test: ApiClients\Tests\Client\GitHub
+    qa:
+      phpcs:
+        enabled: true
+      phpstan:
+        enabled: true
+        configFilePath: etc/phpstan-extension.neon
+      psalm:
+        enabled: false
+    state:
+      additionalFiles:
+        - composer.json
+        - composer.lock

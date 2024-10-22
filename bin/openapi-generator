@@ -1,0 +1,42 @@
+#!/usr/bin/php
+<?php declare(strict_types=1);
+
+use OpenAPITools\Configuration\Configuration;
+use OpenAPITools\Generator\Generator;
+//use ApiClients\Tools\OpenApiClientGenerator\Output\Error;
+use EventSauce\ObjectHydrator\ObjectMapperUsingReflection;
+use Symfony\Component\Yaml\Yaml;
+
+(function(string $_composer_autoload_path) {
+    /**
+     * Require Composer's autoloader
+     */
+    require_once $_composer_autoload_path;
+})($_composer_autoload_path);
+
+(function(string $configuration): void {
+    $exitCode = 1;
+    try {
+        /**
+         * Create and boot up the application
+         */
+        $exitCode = (function (string $configurationFile): int {
+            if (substr($configurationFile, -4) === '.php') {
+                $configuration = require_once $configurationFile;
+            } else {
+                $configuration = (new ObjectMapperUsingReflection())->hydrateObject(Configuration::class, Yaml::parseFile($configurationFile));
+            }
+            Generator::generate(
+                $configuration,
+                dirname($configurationFile) . DIRECTORY_SEPARATOR,
+            );
+
+            return 0;
+        })($configuration);
+    } catch (Throwable $throwable) {
+        echo $throwable;
+//        Error::display($throwable);
+    } finally {
+        exit ($exitCode);
+    }
+})($argv[1]);

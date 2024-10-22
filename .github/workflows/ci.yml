@@ -15,5 +15,3 @@ jobs:
   ci:
     name: Continuous Integration
     uses: WyriHaximus/github-workflows/.github/workflows/package.yaml@main
-    with:
-      jsonPattern: "composer.json"

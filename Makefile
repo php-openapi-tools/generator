@@ -75,5 +75,5 @@ generate-example-client-subsplit:
 generate-example-client-miele:
 	$(DOCKER_RUN) php ./bin/openapi-client-generator ./example/openapi-client-miele.yaml
 
-generate-test-client:
-	$(DOCKER_RUN) php ./bin/openapi-client-generator ./tests/openapi-client-petstore.yaml
+generate-packages:
+	$(DOCKER_RUN) php ./bin/openapi-generator ./example/config.php

@@ -1,16 +1,2 @@
-parameters:
-	excludePaths:
-		- ../../tests/app/*
-		- ../../tests/test-app/*
-	ignoreErrors:
-		- '#cebe\\openapi\\spec\\Reference#'
-		- '#Call to function in_array\(\) requires parameter \#3 to be true.#'
-		- '#with a nullable type declaration.#'
-		- '#Casting class ReflectionType to string is deprecated.#'
-	ergebnis:
-		noExtends:
-			classesAllowedToBeExtended:
-			    - ApiClients\Tools\OpenApiClientGenerator\Contract\Voter\AbstractListOperation
-			    - PhpParser\Builder\Param
 includes:
-	- ../../vendor/wyrihaximus/async-test-utilities/rules.neon
+	- ../../vendor/wyrihaximus/test-utilities/rules.neon
