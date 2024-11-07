@@ -87,7 +87,7 @@ final class Generator
                     file_put_contents($fileName, $fileContents);
                     $state->generatedFiles->upsert($fileName, $fileContentsHash);
 
-                    if (is_string($file->contents)) {
+                    if ($file->loadOnWrite === \OpenAPITools\Utils\File::DO_NOT_LOAD_ON_WRITE) {
                         continue;
                     }
 
