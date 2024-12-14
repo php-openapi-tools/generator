@@ -13,6 +13,7 @@ use OpenAPITools\Utils\State\File;
 use PhpParser\PrettyPrinter\Standard;
 use Safe\Exceptions\FilesystemException;
 
+use function array_filter;
 use function array_map;
 use function dirname;
 use function file_exists;
@@ -29,6 +30,7 @@ use function strpos;
 use function sys_get_temp_dir;
 use function trim;
 use function uniqid;
+use function usleep;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -77,20 +79,36 @@ final class Generator
                     $fileName        .= (is_string($file->contents) && strpos($file->contents, '<?php') === false ? '' : '.php');
                     $fileContents     = $fileStringyfier->toString($file);
                     $fileContentsHash = md5($fileContents);
-                    try {
-                        /** @phpstan-ignore-next-line */
-                        @mkdir(dirname($fileName), 0744, true);
-                    } catch (FilesystemException) {
-                        // @ignoreException
+
+                    if (
+                        ! $state->generatedFiles->has($fileName) ||
+                        $state->generatedFiles->get($fileName)->hash !== $fileContentsHash
+                    ) {
+                        try {
+                            /** @phpstan-ignore-next-line */
+                            @mkdir(dirname($fileName), 0744, true);
+                        } catch (FilesystemException) {
+                            // @ignoreException
+                        }
+
+                        file_put_contents($fileName, $fileContents);
+                        $state->generatedFiles->upsert($fileName, $fileContentsHash);
+
+                        while (! file_exists($fileName) || $fileContentsHash !== md5(file_get_contents($fileName))) {
+                            usleep(100);
+                        }
                     }
 
-                    file_put_contents($fileName, $fileContents);
-                    $state->generatedFiles->upsert($fileName, $fileContentsHash);
+                    $existingFiles = array_filter(
+                        $existingFiles,
+                        static fn (string $file): bool => $file !== $fileName,
+                    );
 
                     if ($file->loadOnWrite === \OpenAPITools\Utils\File::DO_NOT_LOAD_ON_WRITE) {
                         continue;
                     }
 
+                    /** @psalm-suppress UnresolvableInclude */
                     include_once $fileName;
                 }
             }
@@ -104,7 +122,7 @@ final class Generator
                 $state->additionalFiles->remove($file->name);
             }
 
-            foreach ($configuration->state->additionalFiles ?? [] as $additionalFile) {
+            foreach ($package->state->additionalFiles ?? [] as $additionalFile) {
                 $state->additionalFiles->upsert(
                     $additionalFile,
                     file_exists($configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $additionalFile) ? self::hash(file_get_contents($configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $additionalFile)) : '',
