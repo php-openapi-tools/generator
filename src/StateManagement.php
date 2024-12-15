@@ -4,29 +4,27 @@ declare(strict_types=1);
 
 namespace OpenAPITools\Generator;
 
-use EventSauce\ObjectHydrator\ObjectMapperUsingReflection;
 use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Utils\State;
+use RuntimeException;
 use Safe\Exceptions\FilesystemException;
 
 use function dirname;
 use function file_exists;
-use function Safe\file_get_contents;
-use function Safe\file_put_contents;
-use function Safe\json_decode;
-use function Safe\json_encode;
-use function Safe\mkdir;
+use function file_get_contents;
+use function file_put_contents;
+use function is_string;
+use function mkdir;
+use function strlen;
 
 use const DIRECTORY_SEPARATOR;
-use const JSON_PRETTY_PRINT;
 
 final readonly class StateManagement
 {
     public function __construct(
         private string $configurationLocation,
         private Configuration $configuration,
-        private ObjectMapperUsingReflection $genericObjectMapper,
     ) {
     }
 
@@ -34,24 +32,17 @@ final readonly class StateManagement
     {
         $fileName = $this->configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $this->configuration->state->file;
 
-        return $this->genericObjectMapper->hydrateObject(
-            State::class,
-            /** @phpstan-ignore-next-line */
-            file_exists($fileName) ? json_decode(
-                file_get_contents(
-                    $fileName,
-                ),
-                true,
-            ) : [
-                'specHash' => '',
-                'generatedFiles' => [
-                    'files' => [],
-                ],
-                'additionalFiles' => [
-                    'files' => [],
-                ],
-            ],
-        );
+        if (file_exists($fileName)) {
+            $json = file_get_contents($fileName);
+
+            if (! is_string($json)) {
+                throw new RuntimeException('Could not read state file: ' . $fileName);
+            }
+
+            return State::deserialize($json);
+        }
+
+        return State::initialize();
     }
 
     public function save(Package $package, State $state): void
@@ -65,14 +56,10 @@ final readonly class StateManagement
             // @ignoreException
         }
 
-        file_put_contents(
-            $fileName,
-            json_encode(
-                $this->genericObjectMapper->serializeObject(
-                    $state,
-                ),
-                JSON_PRETTY_PRINT,
-            ),
-        );
+        $jsonState    = State::serialize($state);
+        $bytesWritten = file_put_contents($fileName, $jsonState);
+        if ($bytesWritten !== strlen($jsonState)) {
+            throw new RuntimeException('An error occurred while writing state file, written ' . $bytesWritten . ' out of ' . strlen($jsonState) . ': ' . $fileName);
+        }
     }
 }

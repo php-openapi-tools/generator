@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OpenAPITools\Generator;
 
 use cebe\openapi\Reader;
-use EventSauce\ObjectHydrator\ObjectMapperUsingReflection;
 use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Gatherer\Gatherer;
@@ -38,7 +37,7 @@ final class Generator
 {
     public static function generate(Configuration $configuration, string $configurationLocation): void
     {
-        $stateManagement = new StateManagement($configurationLocation, $configuration, new ObjectMapperUsingReflection());
+        $stateManagement = new StateManagement($configurationLocation, $configuration);
 
         $specLocation = $configuration->gathering->spec;
         if (strpos($specLocation, '://') === false) {
