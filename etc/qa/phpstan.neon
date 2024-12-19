@@ -1,2 +1,5 @@
+parameters:
+	ignoreErrors:
+		- '#thecodingmachine/safe#'
 includes:
 	- ../../vendor/wyrihaximus/test-utilities/rules.neon

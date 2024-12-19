@@ -1,5 +1,5 @@
 {
-    "timeout": 3,
+    "timeout": 120,
     "source": {
         "directories": [
             "src"
@@ -14,10 +14,10 @@
     "minMsi": 100,
     "minCoveredMsi": 100,
     "ignoreMsiWithNoMutations": true,
-    "mutators": {
-        "@default": true
-    },
     "phpUnit": {
         "configDir": "./etc/qa/"
+    },
+    "mutators": {
+        "@default": true
     }
 }

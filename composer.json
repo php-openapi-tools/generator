@@ -10,20 +10,22 @@
     ],
     "require": {
         "php": "^8.2",
+        "ext-hash": "^8.2",
+        "devizzent/cebe-php-openapi": "^1.1",
+        "nikic/php-parser": "^4.19",
         "openapi-tools/configuration": "dev-main",
         "openapi-tools/contract": "dev-main",
         "openapi-tools/gatherer": "dev-main",
         "openapi-tools/registry": "dev-main",
         "openapi-tools/representation": "dev-main",
         "openapi-tools/utils": "dev-main",
-        "thecodingmachine/safe": "^2.5",
-        "wyrihaximus/subsplit-tools": "dev-main"
+        "thecodingmachine/safe": "^2.5"
     },
     "require-dev": {
         "openapi-tools/generator-hydrator": "dev-main",
         "openapi-tools/generator-schema": "dev-main",
         "openapi-tools/generator-templates": "dev-main",
-        "wyrihaximus/test-utilities": "^5.6"
+        "wyrihaximus/test-utilities": "^6.0.10"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

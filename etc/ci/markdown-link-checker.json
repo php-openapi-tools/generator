@@ -1,9 +1,4 @@
 {
-  "ignorePatterns": [
-    {
-      "pattern": "^(.*){{[^}]+([^{])*}}(.*)$"
-    }
-  ],
   "httpHeaders": [
     {
       "urls": ["https://docs.github.com/"],
