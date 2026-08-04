@@ -1,62 +1,78 @@
 {
-    "name": "openapi-tools/generator",
-    "description": "Package generation tool for OpenAPI Spec based packages",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Cees-Jan Kiewiet",
-            "email": "ceesjank@gmail.com"
-        }
-    ],
-    "require": {
-        "php": "^8.2",
-        "openapi-tools/configuration": "dev-main",
-        "openapi-tools/contract": "dev-main",
-        "openapi-tools/gatherer": "dev-main",
-        "openapi-tools/registry": "dev-main",
-        "openapi-tools/representation": "dev-main",
-        "openapi-tools/utils": "dev-main",
-        "thecodingmachine/safe": "^2.5",
-        "wyrihaximus/subsplit-tools": "dev-main"
-    },
-    "require-dev": {
-        "openapi-tools/generator-hydrator": "dev-main",
-        "openapi-tools/generator-schema": "dev-main",
-        "openapi-tools/generator-templates": "dev-main",
-        "wyrihaximus/test-utilities": "^5.6"
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "autoload": {
-        "psr-4": {
-            "OpenAPITools\\Generator\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "OpenAPITools\\Tests\\Generator\\": "tests/"
-        }
-    },
-    "bin": [
-        "bin/openapi-generator"
-    ],
-    "config": {
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true,
-            "ergebnis/composer-normalize": true,
-            "infection/extension-installer": true,
-            "wyrihaximus/composer-update-bin-autoload-path": true
-        },
-        "platform": {
-            "php": "8.2.13"
-        }
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "composer normalize"
-        ],
-        "post-update-cmd": [
-            "composer normalize"
-        ]
+  "name": "openapi-tools/generator",
+  "description": "Package generation tool for OpenAPI Spec based packages",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Cees-Jan Kiewiet",
+      "email": "ceesjank@gmail.com"
     }
+  ],
+  "require": {
+    "php": "^8.4",
+    "ext-hash": "^8.4",
+    "devizzent/cebe-php-openapi": "^1.1",
+    "nikic/php-parser": "^5.0",
+    "openapi-tools/configuration": "dev-main",
+    "openapi-tools/contract": "dev-main",
+    "openapi-tools/gatherer": "dev-main",
+    "openapi-tools/registry": "dev-main",
+    "openapi-tools/representation": "dev-main",
+    "openapi-tools/utils": "dev-main"
+  },
+  "require-dev": {
+    "openapi-tools/generator-hydrator": "dev-main",
+    "openapi-tools/generator-schema": "dev-main",
+    "openapi-tools/generator-templates": "dev-main",
+    "shipmonk/coverage-guard": "^1.1.0",
+    "wyrihaximus/async-test-utilities": "^13.5.1",
+    "wyrihaximus/makefiles": "^0.13.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "OpenAPITools\\Generator\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OpenAPITools\\Tests\\Generator\\": "tests/"
+    }
+  },
+  "bin": [
+    "bin/openapi-generator"
+  ],
+  "config": {
+    "allow-plugins": {
+      "composer/package-versions-deprecated": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "drupol/composer-packages": true,
+      "ergebnis/composer-normalize": true,
+      "icanhazstring/composer-unused": true,
+      "infection/extension-installer": true,
+      "mindplay/composer-locator": true,
+      "phpstan/extension-installer": true,
+      "wyrihaximus/composer-update-bin-autoload-path": true,
+      "wyrihaximus/makefiles": true,
+      "wyrihaximus/test-utilities": true
+    },
+    "platform": {
+      "php": "8.4.13"
+    },
+    "sort-packages": true
+  },
+  "extra": {
+    "wyrihaximus": {
+      "supported-features": {
+        "windows": false
+      }
+    }
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "make on-install-or-update || true"
+    ],
+    "post-update-cmd": [
+      "make on-install-or-update || true"
+    ]
+  }
 }

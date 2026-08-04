@@ -5,31 +5,29 @@ declare(strict_types=1);
 namespace OpenAPITools\Generator;
 
 use cebe\openapi\Reader;
-use EventSauce\ObjectHydrator\ObjectMapperUsingReflection;
+use cebe\openapi\spec\OpenApi;
 use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Gatherer\Gatherer;
-use OpenAPITools\Utils\State\File;
+use OpenAPITools\Representation\Representation;
+use OpenAPITools\Utils\File;
+use OpenAPITools\Utils\State;
 use PhpParser\PrettyPrinter\Standard;
-use Safe\Exceptions\FilesystemException;
+use RuntimeException;
 
-use function array_filter;
-use function array_map;
 use function dirname;
 use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
 use function hash;
-use function is_string;
+use function is_dir;
 use function md5;
-use function Safe\file_get_contents;
-use function Safe\file_put_contents;
-use function Safe\mkdir;
-use function Safe\realpath;
-use function Safe\unlink;
-use function str_replace;
-use function strpos;
+use function mkdir;
+use function realpath;
+use function str_contains;
 use function sys_get_temp_dir;
-use function trim;
 use function uniqid;
+use function unlink;
 use function usleep;
 
 use const DIRECTORY_SEPARATOR;
@@ -38,98 +36,139 @@ final class Generator
 {
     public static function generate(Configuration $configuration, string $configurationLocation): void
     {
-        $stateManagement = new StateManagement($configurationLocation, $configuration, new ObjectMapperUsingReflection());
-
-        $specLocation = $configuration->gathering->spec;
-        if (strpos($specLocation, '://') === false) {
-            $specLocation = realpath($configurationLocation . $specLocation);
-        }
-
-        $specYaml     = file_get_contents($specLocation);
-        $specYamlHash = self::hash($specYaml);
-        $tmpFile      = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid() . '.yaml';
-        try {
-            file_put_contents($tmpFile, $specYaml);
-            $spec = Reader::readFromYamlFile($tmpFile);
-        } finally {
-            unlink($tmpFile);
-        }
-
-        $representation  = Gatherer::gather($spec, $configuration->gathering);
-        $fileStringyfier = new FileStringyfier(new Standard());
+        $configurationLocation = PathResolver::configurationLocation($configurationLocation);
+        $stateManagement       = new StateManagement($configurationLocation, $configuration);
+        $specYaml              = self::readSpec($configuration, $configurationLocation);
+        $specYamlHash          = self::hash($specYaml);
+        $representation        = Gatherer::gather(self::parseSpec($specYaml), $configuration->gathering);
+        $fileStringyfier       = new FileStringyfier(new Standard());
 
         foreach ($configuration->packages as $package) {
             if (! ($package instanceof Package)) {
                 continue;
             }
 
-            $namespacedRepresentation = $representation->namespace($package->namespace);
-            $state                    = $stateManagement->load($package);
-            $state->specHash          = $specYamlHash;
-            $existingFiles            = array_map(
-                static fn (File $file): string => $file->name,
-                $state->generatedFiles->files(),
+            self::generatePackage(
+                $configurationLocation,
+                $stateManagement,
+                $package,
+                $specYamlHash,
+                $representation,
+                $fileStringyfier,
             );
+        }
+    }
 
-            foreach ($package->generators as $generator) {
-                foreach ($generator->generate($package, $namespacedRepresentation) as $file) {
-                    $fileName         = $configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR;
-                    $fileName        .= $file->pathPrefix . ($file->pathPrefix === '' ? '' : DIRECTORY_SEPARATOR);
-                    $fileName        .= trim(str_replace('\\', DIRECTORY_SEPARATOR, $file->fqcn), DIRECTORY_SEPARATOR);
-                    $fileName        .= (is_string($file->contents) && strpos($file->contents, '<?php') === false ? '' : '.php');
-                    $fileContents     = $fileStringyfier->toString($file);
-                    $fileContentsHash = md5($fileContents);
+    private static function generatePackage(
+        string $configurationLocation,
+        StateManagement $stateManagement,
+        Package $package,
+        string $specYamlHash,
+        Representation $representation,
+        FileStringyfier $fileStringyfier,
+    ): void {
+        $outputRoot  = PathResolver::packageOutputRoot($configurationLocation, $package);
+        $loadedState = $stateManagement->load($package);
+        $state       = new State($specYamlHash, $loadedState->generatedFiles, $loadedState->additionalFiles);
 
-                    if (
-                        ! $state->generatedFiles->has($fileName) ||
-                        $state->generatedFiles->get($fileName)->hash !== $fileContentsHash
-                    ) {
-                        try {
-                            /** @phpstan-ignore-next-line */
-                            @mkdir(dirname($fileName), 0744, true);
-                        } catch (FilesystemException) {
-                            // @ignoreException
-                        }
+        $existingFiles = [];
+        foreach ($state->generatedFiles->files() as $existingFile) {
+            $existingFiles[PathResolver::normalize($existingFile->name)] = $existingFile->name;
+        }
 
-                        file_put_contents($fileName, $fileContents);
-                        $state->generatedFiles->upsert($fileName, $fileContentsHash);
+        $namespacedRepresentation = $representation->namespace($package->namespace);
 
-                        while (! file_exists($fileName) || $fileContentsHash !== md5(file_get_contents($fileName))) {
-                            usleep(100);
-                        }
-                    }
+        foreach ($package->generators as $generator) {
+            foreach ($generator->generate($package, $namespacedRepresentation) as $file) {
+                $fileName = PathResolver::generatedFile($configurationLocation, $package, $file);
+                self::writeGeneratedFile($fileName, $fileStringyfier->toString($file), $state);
+                unset($existingFiles[$fileName]);
 
-                    $existingFiles = array_filter(
-                        $existingFiles,
-                        static fn (string $file): bool => $file !== $fileName,
-                    );
-
-                    if ($file->loadOnWrite === \OpenAPITools\Utils\File::DO_NOT_LOAD_ON_WRITE) {
-                        continue;
-                    }
-
-                    /** @psalm-suppress UnresolvableInclude */
-                    include_once $fileName;
+                if ($file->loadOnWrite === File::DO_NOT_LOAD_ON_WRITE) {
+                    continue;
                 }
+
+                include_once $fileName;
+            }
+        }
+
+        foreach ($existingFiles as $normalizedName => $recordedName) {
+            $state->generatedFiles->remove($recordedName);
+
+            if (! file_exists($normalizedName) || ! PathResolver::isWithin($outputRoot, $normalizedName)) {
+                continue;
             }
 
-            foreach ($existingFiles as $existingFile) {
-                $state->generatedFiles->remove($existingFile);
-                unlink($existingFile);
+            unlink($normalizedName);
+        }
+
+        foreach ($state->additionalFiles->files() as $file) {
+            $state->additionalFiles->remove($file->name);
+        }
+
+        foreach ($package->state->additionalFiles ?? [] as $additionalFile) {
+            $path = PathResolver::packageFile($configurationLocation, $package, $additionalFile);
+            $state->additionalFiles->upsert(
+                $additionalFile,
+                file_exists($path) ? self::hash((string) file_get_contents($path)) : '',
+            );
+        }
+
+        $stateManagement->save($package, $state);
+    }
+
+    private static function writeGeneratedFile(string $fileName, string $contents, State $state): void
+    {
+        $hash = md5($contents);
+
+        if ($state->generatedFiles->has($fileName) && $state->generatedFiles->get($fileName)->hash === $hash) {
+            return;
+        }
+
+        $directory = dirname($fileName);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0744, true);
+        }
+
+        if (file_put_contents($fileName, $contents) === false) {
+            throw new RuntimeException('Could not write generated file: ' . $fileName);
+        }
+
+        $state->generatedFiles->upsert($fileName, $hash);
+
+        // @codeCoverageIgnoreStart
+        while (! file_exists($fileName) || $hash !== md5((string) file_get_contents($fileName))) {
+            usleep(100);
+        }
+        // @codeCoverageIgnoreEnd
+    }
+
+    private static function readSpec(Configuration $configuration, string $configurationLocation): string
+    {
+        $specLocation = $configuration->gathering->spec;
+        if (! str_contains($specLocation, '://')) {
+            $specLocation = realpath($configurationLocation . $specLocation);
+        }
+
+        $specYaml = file_get_contents($specLocation);
+        if ($specYaml === false) {
+            throw new RuntimeException('Could not read spec: ' . $specLocation);
+        }
+
+        return $specYaml;
+    }
+
+    private static function parseSpec(string $specYaml): OpenApi
+    {
+        $tmpFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid() . '.yaml';
+        try {
+            if (file_put_contents($tmpFile, $specYaml) === false) {
+                throw new RuntimeException('Could not write temporary spec file: ' . $tmpFile);
             }
 
-            foreach ($state->additionalFiles->files() as $file) {
-                $state->additionalFiles->remove($file->name);
-            }
-
-            foreach ($package->state->additionalFiles ?? [] as $additionalFile) {
-                $state->additionalFiles->upsert(
-                    $additionalFile,
-                    file_exists($configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $additionalFile) ? self::hash(file_get_contents($configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $additionalFile)) : '',
-                );
-            }
-
-            $stateManagement->save($package, $state);
+            return Reader::readFromYamlFile($tmpFile);
+        } finally {
+            unlink($tmpFile);
         }
     }
 

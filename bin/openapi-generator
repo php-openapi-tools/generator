@@ -1,9 +1,8 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php declare(strict_types=1);
 
 use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Generator\Generator;
-//use ApiClients\Tools\OpenApiClientGenerator\Output\Error;
 use EventSauce\ObjectHydrator\ObjectMapperUsingReflection;
 use Symfony\Component\Yaml\Yaml;
 
@@ -12,7 +11,7 @@ use Symfony\Component\Yaml\Yaml;
      * Require Composer's autoloader
      */
     require_once $_composer_autoload_path;
-})($_composer_autoload_path);
+})($_composer_autoload_path ?? dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
 (function(string $configuration): void {
     $exitCode = 1;
@@ -35,7 +34,6 @@ use Symfony\Component\Yaml\Yaml;
         })($configuration);
     } catch (Throwable $throwable) {
         echo $throwable;
-//        Error::display($throwable);
     } finally {
         exit ($exitCode);
     }

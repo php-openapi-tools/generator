@@ -1,2 +1,3 @@
-# utils
-Utils for OpenAPI Tools
+# Generator
+
+Generator for generating code with OpenAPI Tools

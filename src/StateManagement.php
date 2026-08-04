@@ -4,75 +4,57 @@ declare(strict_types=1);
 
 namespace OpenAPITools\Generator;
 
-use EventSauce\ObjectHydrator\ObjectMapperUsingReflection;
 use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Utils\State;
-use Safe\Exceptions\FilesystemException;
+use RuntimeException;
 
 use function dirname;
 use function file_exists;
-use function Safe\file_get_contents;
-use function Safe\file_put_contents;
-use function Safe\json_decode;
-use function Safe\json_encode;
-use function Safe\mkdir;
-
-use const DIRECTORY_SEPARATOR;
-use const JSON_PRETTY_PRINT;
+use function file_get_contents;
+use function file_put_contents;
+use function is_dir;
+use function is_string;
+use function mkdir;
+use function strlen;
 
 final readonly class StateManagement
 {
     public function __construct(
         private string $configurationLocation,
         private Configuration $configuration,
-        private ObjectMapperUsingReflection $genericObjectMapper,
     ) {
     }
 
     public function load(Package $package): State
     {
-        $fileName = $this->configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $this->configuration->state->file;
+        $fileName = PathResolver::packageFile($this->configurationLocation, $package, $this->configuration->state->file);
 
-        return $this->genericObjectMapper->hydrateObject(
-            State::class,
-            /** @phpstan-ignore-next-line */
-            file_exists($fileName) ? json_decode(
-                file_get_contents(
-                    $fileName,
-                ),
-                true,
-            ) : [
-                'specHash' => '',
-                'generatedFiles' => [
-                    'files' => [],
-                ],
-                'additionalFiles' => [
-                    'files' => [],
-                ],
-            ],
-        );
+        if (! file_exists($fileName)) {
+            return State::initialize();
+        }
+
+        $json = file_get_contents($fileName);
+        if (! is_string($json)) {
+            throw new RuntimeException('Could not read state file: ' . $fileName);
+        }
+
+        return State::deserialize($json);
     }
 
     public function save(Package $package, State $state): void
     {
-        $fileName = $this->configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $this->configuration->state->file;
+        $fileName  = PathResolver::packageFile($this->configurationLocation, $package, $this->configuration->state->file);
+        $directory = dirname($fileName);
 
-        try {
-            /** @phpstan-ignore-next-line */
-            @mkdir(dirname($fileName), 0744, true);
-        } catch (FilesystemException) {
-            // @ignoreException
+        if (! is_dir($directory)) {
+            mkdir($directory, 0744, true);
         }
 
-        file_put_contents(
-            $fileName,
-            json_encode(
-                $this->genericObjectMapper->serializeObject(
-                    $state,
-                ),
-                JSON_PRETTY_PRINT,
-            ),
-        );
+        $jsonState    = State::serialize($state);
+        $bytesWritten = file_put_contents($fileName, $jsonState);
+        if ($bytesWritten !== strlen($jsonState)) {
+            throw new RuntimeException('An error occurred while writing state file, written ' . $bytesWritten . ' out of ' . strlen($jsonState) . ': ' . $fileName);
+        }
     }
 }

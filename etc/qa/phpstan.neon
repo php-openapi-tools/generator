@@ -1,2 +1,22 @@
-includes:
-	- ../../vendor/wyrihaximus/test-utilities/rules.neon
+parameters:
+	level: max
+	paths:
+		- ../../etc
+		- ../../src
+		- ../../tests
+	shipmonkDeadCode:
+		detect:
+			deadMethods: false
+			deadProperties:
+				neverRead: false
+				neverWritten: false
+	ignoreErrors:
+		-
+			message: '#blocks the event loop#'
+			path: ../../src/*
+		-
+			message: '#blocks the event loop#'
+			path: ../../tests/*
+		-
+			identifier: argument.type
+			path: ../../tests/GeneratorTest.php
