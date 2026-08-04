@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "php": "^8.2",
+    "php": "^8.4",
 {% if requires is iterable %}
 {% for require in requires %}
     "{{ require.name }}": "{{ require.version }}",
@@ -32,7 +32,8 @@
     "{{ require.name }}": "{{ require.version }}",
 {% endfor %}
 {% endif %}
-    "wyrihaximus/async-test-utilities": "^7"
+    "wyrihaximus/async-test-utilities": "^13.5.1",
+    "wyrihaximus/makefiles": "^0.13.3"
   },
   "autoload": {
     "psr-4": {
@@ -63,14 +64,28 @@
   "config": {
     "sort-packages": true,
     "platform": {
-      "php": "8.2.13"
+      "php": "8.4.13"
     },
     "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true,
       "composer/package-versions-deprecated": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "drupol/composer-packages": true,
       "ergebnis/composer-normalize": true,
       "icanhazstring/composer-unused": true,
-      "infection/extension-installer": true
+      "infection/extension-installer": true,
+      "mindplay/composer-locator": true,
+      "phpstan/extension-installer": true,
+      "wyrihaximus/async-test-utilities": true,
+      "wyrihaximus/makefiles": true,
+      "wyrihaximus/test-utilities": true
     }
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "make on-install-or-update || true"
+    ],
+    "post-update-cmd": [
+      "make on-install-or-update || true"
+    ]
   }
 }

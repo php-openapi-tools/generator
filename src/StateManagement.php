@@ -8,17 +8,15 @@ use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Utils\State;
 use RuntimeException;
-use Safe\Exceptions\FilesystemException;
 
 use function dirname;
 use function file_exists;
 use function file_get_contents;
 use function file_put_contents;
+use function is_dir;
 use function is_string;
 use function mkdir;
 use function strlen;
-
-use const DIRECTORY_SEPARATOR;
 
 final readonly class StateManagement
 {
@@ -30,30 +28,27 @@ final readonly class StateManagement
 
     public function load(Package $package): State
     {
-        $fileName = $this->configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $this->configuration->state->file;
+        $fileName = PathResolver::packageFile($this->configurationLocation, $package, $this->configuration->state->file);
 
-        if (file_exists($fileName)) {
-            $json = file_get_contents($fileName);
-
-            if (! is_string($json)) {
-                throw new RuntimeException('Could not read state file: ' . $fileName);
-            }
-
-            return State::deserialize($json);
+        if (! file_exists($fileName)) {
+            return State::initialize();
         }
 
-        return State::initialize();
+        $json = file_get_contents($fileName);
+        if (! is_string($json)) {
+            throw new RuntimeException('Could not read state file: ' . $fileName);
+        }
+
+        return State::deserialize($json);
     }
 
     public function save(Package $package, State $state): void
     {
-        $fileName = $this->configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $this->configuration->state->file;
+        $fileName  = PathResolver::packageFile($this->configurationLocation, $package, $this->configuration->state->file);
+        $directory = dirname($fileName);
 
-        try {
-            /** @phpstan-ignore-next-line */
-            @mkdir(dirname($fileName), 0744, true);
-        } catch (FilesystemException) {
-            // @ignoreException
+        if (! is_dir($directory)) {
+            mkdir($directory, 0744, true);
         }
 
         $jsonState    = State::serialize($state);

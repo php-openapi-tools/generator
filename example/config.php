@@ -6,7 +6,6 @@ use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Gathering;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Configuration\State;
-use OpenAPITools\Generator\FileGenerators;
 use OpenAPITools\Utils\Namespace_;
 use PhpParser\BuilderFactory;
 

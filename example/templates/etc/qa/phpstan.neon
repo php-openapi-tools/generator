@@ -1,3 +1,0 @@
-includes:
-	- ../../vendor/wyrihaximus/async-test-utilities/rules.neon
-	- ../phpstan-extension.neon
