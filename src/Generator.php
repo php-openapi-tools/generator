@@ -9,6 +9,7 @@ use cebe\openapi\spec\OpenApi;
 use OpenAPITools\Configuration\Configuration;
 use OpenAPITools\Configuration\Package;
 use OpenAPITools\Gatherer\Gatherer;
+use OpenAPITools\Generator\Utils\FileStringyfier;
 use OpenAPITools\Representation\Representation;
 use OpenAPITools\Utils\File;
 use OpenAPITools\Utils\State;
@@ -32,8 +33,19 @@ use function usleep;
 
 use const DIRECTORY_SEPARATOR;
 
+/**
+ * Orchestrates OpenAPI spec gathering, file generation, and incremental writes.
+ *
+ * @api
+ */
 final class Generator
 {
+    /**
+     * Generate all configured packages.
+     *
+     * @param Configuration $configuration         Root configuration with gathering settings and packages
+     * @param string        $configurationLocation Directory containing the configuration file; paths in the configuration are relative to this directory
+     */
     public static function generate(Configuration $configuration, string $configurationLocation): void
     {
         $configurationLocation = PathResolver::configurationLocation($configurationLocation);
@@ -121,7 +133,7 @@ final class Generator
     {
         $hash = md5($contents);
 
-        if ($state->generatedFiles->has($fileName) && $state->generatedFiles->get($fileName)->hash === $hash) {
+        if (file_exists($fileName) && $state->generatedFiles->has($fileName) && $state->generatedFiles->get($fileName)->hash === $hash) {
             return;
         }
 

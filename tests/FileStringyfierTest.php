@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpenAPITools\Tests\Generator;
 
-use OpenAPITools\Generator\FileStringyfier;
+use OpenAPITools\Generator\Utils\FileStringyfier;
 use OpenAPITools\Utils\File;
 use PhpParser\BuilderFactory;
 use PhpParser\PrettyPrinter\Standard;

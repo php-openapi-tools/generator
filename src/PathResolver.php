@@ -28,8 +28,14 @@ use function trim;
 
 use const DIRECTORY_SEPARATOR;
 
+/**
+ * Resolves configuration-relative paths and validates generated file locations.
+ *
+ * @api
+ */
 final class PathResolver
 {
+    /** Resolve and validate the configuration directory. */
     public static function configurationLocation(string $location): string
     {
         if ($location === '') {
@@ -52,11 +58,13 @@ final class PathResolver
         return rtrim(realpath($location), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
     }
 
+    /** Return the normalized root directory for a package's generated output. */
     public static function packageOutputRoot(string $configurationLocation, Package $package): string
     {
         return self::normalize($configurationLocation . $package->destination->root);
     }
 
+    /** Resolve the on-disk path for a generated file from its FQCN and path prefix. */
     public static function generatedFile(string $configurationLocation, Package $package, File $file): string
     {
         if (trim($file->fqcn) === '') {
@@ -70,6 +78,7 @@ final class PathResolver
         return self::packageFile($configurationLocation, $package, $relative);
     }
 
+    /** Resolve a path relative to the package destination, rejecting paths outside the output root. */
     public static function packageFile(string $configurationLocation, Package $package, string $relativePath): string
     {
         $path = self::normalize($configurationLocation . $package->destination->root . DIRECTORY_SEPARATOR . $relativePath);
@@ -120,6 +129,7 @@ final class PathResolver
         return $prefix . implode(DIRECTORY_SEPARATOR, $segments);
     }
 
+    /** Return whether {@see $path} is lexically within {@see $root}. */
     public static function isWithin(string $root, string $path): bool
     {
         $root = rtrim(str_replace('\\', DIRECTORY_SEPARATOR, self::normalize($root)), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;

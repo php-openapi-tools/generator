@@ -18,6 +18,11 @@ use function is_string;
 use function mkdir;
 use function strlen;
 
+/**
+ * Loads and persists generation state for a package.
+ *
+ * @api
+ */
 final readonly class StateManagement
 {
     public function __construct(
@@ -26,6 +31,7 @@ final readonly class StateManagement
     ) {
     }
 
+    /** Load persisted state for the given package, or return an empty initial state when none exists. */
     public function load(Package $package): State
     {
         $fileName = PathResolver::packageFile($this->configurationLocation, $package, $this->configuration->state->file);
@@ -42,6 +48,7 @@ final readonly class StateManagement
         return State::deserialize($json);
     }
 
+    /** Persist generation state for the given package. */
     public function save(Package $package, State $state): void
     {
         $fileName  = PathResolver::packageFile($this->configurationLocation, $package, $this->configuration->state->file);
