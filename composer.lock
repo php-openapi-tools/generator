@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "728f6cafeadafab471d8af5b5feb825f",
+    "content-hash": "af5325026404e44b36e50c57404f9e40",
     "packages": [
         {
             "name": "ckr/arraymerger",
@@ -10754,16 +10754,16 @@
         },
         {
             "name": "wyrihaximus/makefiles",
-            "version": "0.14.6",
+            "version": "0.14.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/WyriHaximus/Makefiles.git",
-                "reference": "5429f0ecb0b7537efacb4f5ad5c8859e468a727e"
+                "reference": "fadcb1109c119db9746a9679b40588db90baa106"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/WyriHaximus/Makefiles/zipball/5429f0ecb0b7537efacb4f5ad5c8859e468a727e",
-                "reference": "5429f0ecb0b7537efacb4f5ad5c8859e468a727e",
+                "url": "https://api.github.com/repos/WyriHaximus/Makefiles/zipball/fadcb1109c119db9746a9679b40588db90baa106",
+                "reference": "fadcb1109c119db9746a9679b40588db90baa106",
                 "shasum": ""
             },
             "require": {
@@ -10804,7 +10804,7 @@
             "description": "🧱 Makefile building blocks",
             "support": {
                 "issues": "https://github.com/WyriHaximus/Makefiles/issues",
-                "source": "https://github.com/WyriHaximus/Makefiles/tree/0.14.6"
+                "source": "https://github.com/WyriHaximus/Makefiles/tree/0.14.7"
             },
             "funding": [
                 {
@@ -10812,7 +10812,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-26T20:51:39+00:00"
+            "time": "2026-09-01T06:26:20+00:00"
         },
         {
             "name": "wyrihaximus/phpstan-no-safe",
