@@ -26,7 +26,7 @@
     "openapi-tools/generator-schema": "^0.1.0",
     "openapi-tools/generator-templates": "^0.1.0",
     "shipmonk/coverage-guard": "^1.1.0",
-    "wyrihaximus/async-test-utilities": "^13.5.2",
+    "wyrihaximus/async-test-utilities": "^14.2.0",
     "wyrihaximus/makefiles": "^0.14.6"
   },
   "autoload": {
